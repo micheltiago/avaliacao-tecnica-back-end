@@ -3,11 +3,13 @@ package avaliacao.tecnica.back.end.service;
 import avaliacao.tecnica.back.end.client.RestCpfClient;
 import avaliacao.tecnica.back.end.domain.Pauta;
 import avaliacao.tecnica.back.end.domain.Votacao;
+import avaliacao.tecnica.back.end.dto.CadastroPautaDto;
 import avaliacao.tecnica.back.end.exception.AvaliacaoException;
 import avaliacao.tecnica.back.end.producer.AvaliacaoProducer;
 import avaliacao.tecnica.back.end.repository.PautaRepository;
 import avaliacao.tecnica.back.end.repository.VotacaoRepository;
 import avaliacao.tecnica.back.end.util.Constants;
+import java.util.List;
 import java.util.Optional;
 import org.junit.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -31,16 +33,16 @@ public class ServiceBackEndTest {
     @Mock
     private AvaliacaoProducer producer;
     @InjectMocks
-    private ServiceBackEnd service;
+    private MyService service;
 
     @Test
     public void testCadastrarPauta() {
         Pauta pauta = Constants.pauta();
-        String expResult = Constants.criarPauta(pauta.getId());
+        List<CadastroPautaDto> expResult = Constants.criarPauta(pauta.getId());
         when(this.pauta.save(any())).thenReturn(pauta);
-        String result = this.service.cadastrarPauta(null);
+        List<CadastroPautaDto> list = this.service.cadastrarPauta(null);
 
-        assertEquals(expResult, result);
+        assertEquals(expResult, list);
     }
 
     @Test
@@ -88,9 +90,9 @@ public class ServiceBackEndTest {
         when(this.pauta.findById(any())).thenReturn(Optional.of(pauta));
         when(this.client.getValidaCpf(any())).thenReturn(Constants.cpfvalido());
         when(this.votacao.save(any())).thenReturn(votacao);
-        String result = this.service.votar(pauta.getId(), votacao.getCpf(), votacao.getVoto());
+        Votacao result = this.service.votar(pauta.getId(), votacao.getCpf(), votacao.getVoto());
 
-        assertEquals(votacao.toString(), result);
+        assertEquals(votacao, result);
     }
 
 }

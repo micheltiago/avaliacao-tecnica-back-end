@@ -11,9 +11,7 @@ import lombok.NoArgsConstructor;
 @EqualsAndHashCode
 @Data
 @Builder
-public class RetornoDto {
+public class RetornoServicoDto {
 
-    //ABLE_TO_VOTE
-    //UNABLE_TO_VOTE
     private String status;
 }

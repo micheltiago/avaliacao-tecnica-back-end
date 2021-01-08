@@ -1,8 +1,11 @@
 package avaliacao.tecnica.back.end.controller;
 
-import avaliacao.tecnica.back.end.service.ServiceBackEnd;
+import avaliacao.tecnica.back.end.service.MyService;
+import avaliacao.tecnica.back.end.util.Constants;
+import org.aspectj.apache.bcel.classfile.Constant;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -15,22 +18,22 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @RunWith(SpringRunner.class)
-@WebMvcTest(AvaController.class)
+@WebMvcTest(AvaliacaoController.class)
 public class ControllerTest {
 
     @Autowired
     private MockMvc mvc;
 
     @MockBean
-    ServiceBackEnd service;
+    MyService service;
 
     @Test
     public void testCadastrar() throws Exception {
         System.out.println("cadastrar");
         String tempo = "6";
-        when(this.service.cadastrarPauta(null)).thenReturn("OK");
+        when(this.service.cadastrarPauta(null)).thenReturn(any());
         mvc.perform(MockMvcRequestBuilders
-                .get("/criarPauta/{tempo}", tempo)
+                .get("/pauta/{tempo}", tempo)
                 .param("tempo", tempo)
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON))
@@ -44,9 +47,9 @@ public class ControllerTest {
         String pauta = "384331500";
         String voto = "S";
         String cpf = "12345678909";
-        when(this.service.cadastrarPauta(null)).thenReturn("OK");
+        when(this.service.cadastrarPauta(null)).thenReturn(Constants.criarPauta(pauta));
         mvc.perform(MockMvcRequestBuilders
-                .get("/pauta/{pauta}/voto/{voto}/cpf/{cpf}", pauta, voto, cpf)
+                .get("/votacao/{pauta}/{voto}/{cpf}", pauta, voto, cpf)
                 .param("pauta", pauta)
                 .param("voto", voto)
                 .param("cpf", cpf)

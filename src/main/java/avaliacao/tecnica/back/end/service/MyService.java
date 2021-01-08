@@ -3,7 +3,8 @@ package avaliacao.tecnica.back.end.service;
 import avaliacao.tecnica.back.end.client.RestCpfClient;
 import avaliacao.tecnica.back.end.domain.Pauta;
 import avaliacao.tecnica.back.end.domain.Votacao;
-import avaliacao.tecnica.back.end.dto.RetornoDto;
+import avaliacao.tecnica.back.end.dto.CadastroPautaDto;
+import avaliacao.tecnica.back.end.dto.RetornoServicoDto;
 import avaliacao.tecnica.back.end.exception.AvaliacaoException;
 import avaliacao.tecnica.back.end.producer.AvaliacaoProducer;
 import avaliacao.tecnica.back.end.repository.PautaRepository;
@@ -11,6 +12,7 @@ import avaliacao.tecnica.back.end.repository.VotacaoRepository;
 import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -22,44 +24,46 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class ServiceBackEnd {
+public class MyService {
 
     private final RestCpfClient client;
-    private final PautaRepository pauta;
-    private final VotacaoRepository votacao;
+    private final PautaRepository pautaRepository;
+    private final VotacaoRepository votacaoRepository;
     private final AvaliacaoProducer producer;
 
-    public String cadastrarPauta(Integer tempo) {
+    public List<CadastroPautaDto> cadastrarPauta(Integer tempo) {
         log.info("cadastrarPauta...");
 
-        Pauta p = this.pauta.save(Pauta
+        Pauta p = this.pautaRepository.save(Pauta
                 .builder()
                 .id(String.valueOf(LocalDateTime.now().getNano()))
                 .dataSessao(LocalDateTime.now())
                 .tempo(tempo)
                 .build());
-        Map<String, Long> votos = this.votacao.findAll()
+        Map<String, Long> votos = this.votacaoRepository.findAll()
                 .stream()
                 .collect(
                         Collectors.groupingBy((Votacao v) -> v.getPauta().getId(), Collectors.counting())
                 );
         votos.put(p.getId(), 0L);
-        return votos.toString();
+
+        return votos.entrySet().stream().map(m -> new CadastroPautaDto(m.getKey(), m.getValue()))
+                .collect(Collectors.toList());
     }
 
-    public String votar(String pauta, String cpf, String voto) {
+    public Votacao votar(String pauta, String cpf, String voto) {
         log.info("Votar...");
         if (validarPautaAberta(pauta)) {
             if (validarCPF(cpf)) {
                 if (validarSeJaVotou(pauta, cpf)) {
-                    Votacao v = this.votacao.save(Votacao
+                    Votacao votacao = this.votacaoRepository.save(Votacao
                             .builder()
                             .cpf(cpf)
                             .pauta(Pauta.builder().id(pauta).build())
                             .voto(voto)
                             .build());
-                    this.producer.send(v);
-                    return v.toString();
+                    this.producer.send(votacao);
+                    return votacao;
                 }
                 throw new AvaliacaoException("USUARIO JA VOTOU!");
             }
@@ -68,8 +72,8 @@ public class ServiceBackEnd {
         throw new AvaliacaoException("VOTACAO ENCERRADA!");
     }
 
-    private boolean validarPautaAberta(String p) {
-        Optional<Pauta> entity = this.pauta.findById(p);
+    private boolean validarPautaAberta(String pauta) {
+        Optional<Pauta> entity = this.pautaRepository.findById(pauta);
         if (entity.isPresent()) {
             LocalDateTime data = entity.get().getDataSessao().plusMinutes(Objects.isNull(entity.get().getTempo()) ? 1 : entity.get().getTempo());
             if (data.isAfter(LocalDateTime.now())) {
@@ -79,16 +83,16 @@ public class ServiceBackEnd {
         return FALSE;
     }
 
-    private boolean validarSeJaVotou(String P, String cpf) {
-        return this.votacao.findByCpfAndPauta(cpf, Pauta.builder()
-                .id(P)
+    private boolean validarSeJaVotou(String idPauta, String cpf) {
+        return this.votacaoRepository.findByCpfAndPauta(cpf, Pauta.builder()
+                .id(idPauta)
                 .build()
-        ).isPresent();
+        ).isEmpty();
     }
 
     private boolean validarCPF(String cpf) {
         try {
-            RetornoDto ret = this.client.getValidaCpf(cpf);
+            RetornoServicoDto ret = this.client.getValidaCpf(cpf);
             if (Objects.nonNull(ret) && ret.getStatus().equals("ABLE_TO_VOTE")) {
                 return TRUE;
             }

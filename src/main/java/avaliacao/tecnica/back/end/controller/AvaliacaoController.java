@@ -1,11 +1,14 @@
 package avaliacao.tecnica.back.end.controller;
 
-import avaliacao.tecnica.back.end.service.ServiceBackEnd;
+import avaliacao.tecnica.back.end.domain.Votacao;
+import avaliacao.tecnica.back.end.dto.CadastroPautaDto;
+import avaliacao.tecnica.back.end.service.MyService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -14,14 +17,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 @AllArgsConstructor
 @RestController
 @RequestMapping("/")
-public class AvaController {
+public class AvaliacaoController {
 
     @Autowired
-    private final ServiceBackEnd service;
+    private final MyService service;
 
     @ApiOperation(value = "Cadastrar uma nova pauta.", response = String.class)
-    @GetMapping(path = "/criarPauta/{tempo}")
-    public ResponseEntity<String> cadastrar(
+    @GetMapping(path = "/pauta/{tempo}")
+    public ResponseEntity<List<CadastroPautaDto> > cadastrar(
             @RequestParam(name = "tempo", required = false) Integer tempo
     ) {
         log.info("Cadastrar uma nova pauta ");
@@ -29,8 +32,8 @@ public class AvaController {
     }
 
     @ApiOperation(value = "Votar.", response = String.class)
-    @GetMapping(path = "/pauta/{pauta}/voto/{voto}/cpf/{cpf}")
-    public ResponseEntity<String> votar(
+    @GetMapping(path = "/votacao/{pauta}/{voto}/{cpf}")
+    public ResponseEntity<Votacao> votar(
             @RequestParam(name = "cpf", required = true) String cpf,
             @RequestParam(name = "pauta", required = true) String pauta,
             @RequestParam(name = "voto", required = true) String voto) {
