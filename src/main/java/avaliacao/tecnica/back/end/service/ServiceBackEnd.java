@@ -8,6 +8,8 @@ import avaliacao.tecnica.back.end.exception.AvaliacaoException;
 import avaliacao.tecnica.back.end.producer.AvaliacaoProducer;
 import avaliacao.tecnica.back.end.repository.PautaRepository;
 import avaliacao.tecnica.back.end.repository.VotacaoRepository;
+import static java.lang.Boolean.FALSE;
+import static java.lang.Boolean.TRUE;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Objects;
@@ -71,33 +73,29 @@ public class ServiceBackEnd {
         if (entity.isPresent()) {
             LocalDateTime data = entity.get().getDataSessao().plusMinutes(Objects.isNull(entity.get().getTempo()) ? 1 : entity.get().getTempo());
             if (data.isAfter(LocalDateTime.now())) {
-                return Boolean.TRUE;
+                return TRUE;
             }
         }
-        return Boolean.FALSE;
+        return FALSE;
     }
 
     private boolean validarSeJaVotou(String P, String cpf) {
-        Optional<Votacao> entity = this.votacao.findByCpfAndPauta(cpf, Pauta.builder()
+        return this.votacao.findByCpfAndPauta(cpf, Pauta.builder()
                 .id(P)
                 .build()
-        );
-        if (entity.isPresent()) {
-            return Boolean.FALSE;
-        }
-        return Boolean.TRUE;
+        ).isPresent();
     }
 
     private boolean validarCPF(String cpf) {
         try {
             RetornoDto ret = this.client.getValidaCpf(cpf);
             if (Objects.nonNull(ret) && ret.getStatus().equals("ABLE_TO_VOTE")) {
-                return Boolean.TRUE;
+                return TRUE;
             }
         } catch (Exception e) {
             log.error(e.getMessage());
         }
-        return Boolean.FALSE;
+        return FALSE;
     }
 
 }
